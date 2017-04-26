@@ -146,7 +146,9 @@ void setup()
     //CAN_Send(0x07EA,0x01,0x08,0x11,0x00,0x00,0x00,0x00,0x00); delay(10); // Synchronize to 'Node Start' (0x0000,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00)
     //CAN_Send(0x07EA,0x01,0x08,0x01,0x00,0x00,0x00,0x00,0x00); delay(10); // Free Running Mode
     //This is for starting the MTS sensor
-    CAN_Send(0x0001,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00);
+
+    CAN_Send(0x0000,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00);
+
     Serial.flush();
 
     Serial3.flush();
@@ -174,7 +176,7 @@ void loop() {
 	Serial.println("Start waiting...");
 
 	//Check if there is command from the MTS sensor or slave controller
-	Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
+	//Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
 
 	if(Command_Read_from_Slave!="0" && Command_Read_from_Slave!=""){
         Serial.print("CAN Message from slave: ");
@@ -543,7 +545,7 @@ void loop() {
     if(Loop_count==100){
         Loop_count=0;
     }
-    Read_and_Print_Sensors(Loop_count,Link_Number_Count);
+    //Read_and_Print_Sensors(Loop_count,Link_Number_Count);
     Loop_count++;
     Serial.println("Loop_count:");
     Serial.print(Loop_count);
