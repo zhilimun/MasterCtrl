@@ -1,0 +1,2 @@
+eclipse.preferences.version=1
+libraries=[{"package"\:"arduino","platform"\:"avr","library"\:"Wire"},"BlueRobotics MS5837-30BA Library","AccelStepper",{"package"\:"arduino","platform"\:"avr","library"\:"HID"},{"package"\:"arduino","platform"\:"avr","library"\:"SoftwareSerial"},{"package"\:"arduino","platform"\:"avr","library"\:"SPI"},{"package"\:"arduino","platform"\:"avr","library"\:"EEPROM"},"BlueRobotics TSYS01 Library"]
