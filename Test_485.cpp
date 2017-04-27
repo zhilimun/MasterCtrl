@@ -67,6 +67,8 @@ String CP_output_string;
 
 int position1=0;//, position2=0, position3=0, position4=0;
 int Link_Number_Count=0;
+// The MTS sensor output string to be sent to PC
+String MTS_sensor_out="";
 
 String CAN_Read_message_1_new="01:02:00:00:00:00:00:00"; //String CAN_Read_message_2_new="02:02:00:00:00:00:00:00";
 String Command_Read_from_Slave="01:02:00:00:00:00:00:00";
@@ -163,7 +165,7 @@ void loop() {
 	//Serial.println("Start waiting...");
 
 	//Check if there is command from the MTS sensor or slave controller
-	//Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
+	Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
 
 	if(Command_Read_from_Slave!="0" && Command_Read_from_Slave!=""){
         Serial.print("CAN Message from slave: ");
@@ -629,20 +631,10 @@ void Read_and_Print_Sensors(int Loop_count, int Link_number){
         Serial3.println(Depth_string);delay(2);
         Serial3.println(CP_output_string);delay(2);
         Serial3.println(Degree_string);delay(2);
+        Serial3.println(MTS_sensor_out);delay(2);
         digitalWrite(SSerialTxControl,RS485Receive);delay(1);
 
-        /*
-        digitalWrite(SSerialTxControl,RS485Transmit);delay(5);
-        Serial3.println(Degree_string);delay(5);
-        digitalWrite(SSerialTxControl, RS485Receive);delay(5);
-        */
-
-
     }
-
-
-    //delay(20);
-    //Serial.println(Degree_string);
 }
 
 
@@ -677,7 +669,7 @@ String CAN_send2GUI(){
     Magnet_ps_1=CAN_Read_message_1_new.substring(6,8)+CAN_Read_message_1_new.substring(9,11)+CAN_Read_message_1_new.substring(12,14);
 
     unsigned int string_length=0;
-    String MTS_sensor_out="";
+
     Position_1_new=ConvertString2Int(Magnet_ps_1)*0.5; //Position_1_int=int(Position_1);
     if(Position_1_new>20){
         Position_1_old=Position_1_new;
@@ -692,11 +684,11 @@ String CAN_send2GUI(){
     }
 
     MTS_sensor_out="C"+Magnet_ps_1+"+"+"00000";//+Magnet_ps_2;
-    digitalWrite(SSerialTxControl, RS485Transmit);//delay(1);
+    //digitalWrite(SSerialTxControl, RS485Transmit);//delay(1);
     //Serial.println(MTS_sensor_out);delay(2);
-    Serial3.println(MTS_sensor_out);delay(2);
+    //Serial3.println(MTS_sensor_out);delay(2);
     //Serial.println(MTS_sensor_out);delay(2);
-    digitalWrite(SSerialTxControl, RS485Receive);//delay(5);
+    //digitalWrite(SSerialTxControl, RS485Receive);//delay(5);
 
     result_message="0";
     return result_message;
