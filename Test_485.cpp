@@ -132,21 +132,8 @@ void setup()
         delay(100);
     }
     Serial.println("CAN BUS Shield init ok!");
-    /*
-    //We reconfigure the CAN bus rate to 1 Mbps, previously it is 500 kbps
-    if(Canbus.init(CANSPEED_500))  // Initialise MCP2515 CAN controller at the specified speed
-    {
-        Serial.println("YES CAN!");delay(5);
-    } else
-    {
-        Serial.println("NO CAN");delay(5);
-    } delay(5);
-    */
-    //CAN_Send(0x07E5,0x02,0x90,0x76,0x39,0x92,0x01,0x00,0x00); delay(10);
-    //CAN_Send(0x07EA,0x01,0x08,0x11,0x00,0x00,0x00,0x00,0x00); delay(10); // Synchronize to 'Node Start' (0x0000,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00)
-    //CAN_Send(0x07EA,0x01,0x08,0x01,0x00,0x00,0x00,0x00,0x00); delay(10); // Free Running Mode
-    //This is for starting the MTS sensor
 
+    //This is for starting the MTS sensor
     CAN_Send(0x0000,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00);
 
     Serial.flush();
@@ -176,7 +163,7 @@ void loop() {
 	Serial.println("Start waiting...");
 
 	//Check if there is command from the MTS sensor or slave controller
-	//Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
+	Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
 
 	if(Command_Read_from_Slave!="0" && Command_Read_from_Slave!=""){
         Serial.print("CAN Message from slave: ");
@@ -209,6 +196,8 @@ void loop() {
         case_number=9;}
     else if(PC_Command==""){
         case_number=10;}
+    else if((PC_Command.length()==8)&&(PC_Command=="REQUDATA")){
+    	case_number=11;}
     else{
         case_number=0;}
 
@@ -530,6 +519,9 @@ void loop() {
         break;
     case 10:
         break;
+    case 11:
+    	Serial.println("Receive the request for data message.");
+    	break;
     default:
         PC_Command="";//delay(1);
         Command_Read_from_Slave="";
