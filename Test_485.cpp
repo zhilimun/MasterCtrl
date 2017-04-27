@@ -111,7 +111,7 @@ void setup()
     digitalWrite(SSerialTxControl, RS485Transmit); delay(5); // Init Transceiver
     Serial3.end();delay(10);
     Serial3.begin(115200);delay(10);
-    Serial3.setTimeout(1000); delay(5);// set the data rate
+    Serial3.setTimeout(100); delay(5);// set the data rate
     Serial3.println("ROMIT <--> PC");delay(10);
     Serial.println("ROMIT <--> PC");delay(10);
     //Master_Serial.println("RMTSTART");delay(5);  // Mst ask Slv to start Beeper
@@ -160,10 +160,10 @@ void setup()
 void(* resetFunc) (void) = 0;//declare reset function at address 0
 
 void loop() {
-	Serial.println("Start waiting...");
+	//Serial.println("Start waiting...");
 
 	//Check if there is command from the MTS sensor or slave controller
-	Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
+	//Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
 
 	if(Command_Read_from_Slave!="0" && Command_Read_from_Slave!=""){
         Serial.print("CAN Message from slave: ");
@@ -198,10 +198,12 @@ void loop() {
         case_number=10;}
     else if((PC_Command.length()==8)&&(PC_Command=="REQUDATA")){
     	case_number=11;}
+    else if((PC_Command.length()==9)&&(PC_Command.substring(0,8)=="REQUDATA")){
+    	case_number=11;}
     else{
         case_number=0;}
 
-    Serial.print(case_number);
+    //Serial.print(case_number);
 
     switch(case_number){
     case 0:
@@ -520,7 +522,7 @@ void loop() {
     case 10:
         break;
     case 11:
-    	Serial.println("Receive the request for data message.");
+    	Read_and_Print_Sensors(Loop_count,Link_Number_Count);
     	break;
     default:
         PC_Command="";//delay(1);
@@ -539,9 +541,9 @@ void loop() {
     }
     //Read_and_Print_Sensors(Loop_count,Link_Number_Count);
     Loop_count++;
-    Serial.println("Loop_count:");
-    Serial.print(Loop_count);
-    Serial.println("\n\r");
+    //Serial.println("Loop_count:");
+    //Serial.print(Loop_count);
+    //Serial.println("\n\r");
 
     Serial.print(PC_Command);
     Serial3.flush();
@@ -555,7 +557,7 @@ void Read_and_Print_Sensors(int Loop_count, int Link_number){
     String Link_number_string;
 
     //Temperature Sensor
-    if(Loop_count%10==0||Loop_count<1){
+    if(Loop_count%5==0||Loop_count<1){
         Temperature_sensor.read();
         Temp_string=Temperature_sensor.temperature();
         //Temperature Sensor [Temperature] Reading
@@ -569,15 +571,7 @@ void Read_and_Print_Sensors(int Loop_count, int Link_number){
         for(int i=Link_number_string.length();i<12;i++){
             Link_number_string+="N";
         }
-        //while(Serial3.available()>0);
-        digitalWrite(SSerialTxControl,RS485Transmit);delay(5);
-        Serial3.println(Temp_string);delay(5);
-        Serial3.println(Link_number_string);delay(5);
-        digitalWrite(SSerialTxControl,RS485Receive);delay(5);
-    }
 
-    //Pressure Sensor
-    if(Loop_count%10==0||Loop_count<1){
         //Pressure Sensor
         Pressure_sensor.read();//delay(5);
         Pressure_string=String(Pressure_sensor.pressure()); // Unit bar
@@ -588,20 +582,13 @@ void Read_and_Print_Sensors(int Loop_count, int Link_number){
         for(int i=Pressure_string.length();i<12;i++){
             Pressure_string+="P";
         }
-        //while(Serial3.available()>0);
-        digitalWrite(SSerialTxControl,RS485Transmit);delay(5);
-        Serial3.println(Pressure_string);delay(5);
-        digitalWrite(SSerialTxControl,RS485Receive);delay(5);
+
 
         //Pressure Sensor [Depth] Reading
         Depth_string="DSD"+Depth_string+"D";
         for(int i=Depth_string.length();i<12;i++){
             Depth_string+="D";
         }
-        //while(Serial3.available()>0);
-        digitalWrite(SSerialTxControl,RS485Transmit);delay(5);
-        Serial3.println(Depth_string);delay(5);
-        digitalWrite(SSerialTxControl,RS485Receive);delay(5);
 
         //CP Probe Output
         CP_output=analogRead(CP_Probe);
@@ -614,38 +601,47 @@ void Read_and_Print_Sensors(int Loop_count, int Link_number){
         for(int i=CP_output_string.length();i<12;i++){
             CP_output_string+="C";
         }
-        //while(Serial3.available()>0);
+
+        //Tilt Sensor
+        X_IntValue = analogRead(Tilt_x_Input);//delay(1);//Read value
+        X_IntValue = constrain(X_IntValue+X_IntValue_offset,102,921);//delay(1);
+        X_degree = map(X_IntValue,102,921,-90,90);//delay(1);
+        //X_arc_minute = (int((X_IntValue-100)*13.17))%60;delay(5);
+        X_Degree_string=X_degree; X_Minute_string=X_arc_minute;
+
+        Y_IntValue = analogRead(Tilt_y_Input); //delay(1);//Read value
+        Y_IntValue = constrain(Y_IntValue+Y_IntValue_offset,102,921);//delay(1);
+        Y_degree = map(Y_IntValue,102,921,-90,90);//delay(1);
+        //Y_arc_minute = (int((Y_IntValue-100)*13.17))%60;delay(5);
+        Y_Degree_string=Y_degree; Y_Minute_string=Y_arc_minute;
+
+        //Tilt Sensor [Tilt_X_Axis] Reading
+        Degree_string="TDS"+X_Degree_string+"+"+Y_Degree_string;
+        for(int i=Degree_string.length();i<12;i++){
+            Degree_string+="D";
+        }
+
+        //Send the data together
+        digitalWrite(SSerialTxControl,RS485Transmit);delay(1);
+        Serial3.println(Temp_string);delay(2);
+        Serial3.println(Link_number_string);delay(2);
+        Serial3.println(Pressure_string);delay(2);
+        Serial3.println(Depth_string);delay(2);
+        Serial3.println(CP_output_string);delay(2);
+        Serial3.println(Degree_string);delay(2);
+        digitalWrite(SSerialTxControl,RS485Receive);delay(1);
+
+        /*
         digitalWrite(SSerialTxControl,RS485Transmit);delay(5);
-        Serial3.println(CP_output_string);delay(5);
-        digitalWrite(SSerialTxControl,RS485Receive);delay(5);
+        Serial3.println(Degree_string);delay(5);
+        digitalWrite(SSerialTxControl, RS485Receive);delay(5);
+        */
 
-        //Serial.println(CP_output_string);
+
     }
 
-    //Tilt Sensor
-    X_IntValue = analogRead(Tilt_x_Input);//delay(1);//Read value
-    X_IntValue = constrain(X_IntValue+X_IntValue_offset,102,921);//delay(1);
-    X_degree = map(X_IntValue,102,921,-90,90);//delay(1);
-    //X_arc_minute = (int((X_IntValue-100)*13.17))%60;delay(5);
-    X_Degree_string=X_degree; X_Minute_string=X_arc_minute;
 
-    Y_IntValue = analogRead(Tilt_y_Input); //delay(1);//Read value
-    Y_IntValue = constrain(Y_IntValue+Y_IntValue_offset,102,921);//delay(1);
-    Y_degree = map(Y_IntValue,102,921,-90,90);//delay(1);
-    //Y_arc_minute = (int((Y_IntValue-100)*13.17))%60;delay(5);
-    Y_Degree_string=Y_degree; Y_Minute_string=Y_arc_minute;
-
-    //Tilt Sensor [Tilt_X_Axis] Reading
-    Degree_string="TDS"+X_Degree_string+"+"+Y_Degree_string;
-    for(int i=Degree_string.length();i<12;i++){
-        Degree_string+="D";
-    }
-
-    //while(Serial3.available()>0);
-    digitalWrite(SSerialTxControl,RS485Transmit);delay(5);
-    Serial3.println(Degree_string);delay(5);
-    digitalWrite(SSerialTxControl, RS485Receive);delay(5);
-
+    //delay(20);
     //Serial.println(Degree_string);
 }
 
