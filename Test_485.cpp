@@ -86,6 +86,7 @@ MCP_CAN CAN(SPI_CS_PIN);    // Set CS pin
 void Read_and_Print_Sensors(int Loop_count, int Link_number);
 String CAN_send2GUI();
 
+
 void setup()
 {
 	unsigned char ii=0;
@@ -162,10 +163,62 @@ void setup()
 void(* resetFunc) (void) = 0;//declare reset function at address 0
 
 void loop() {
-	//Serial.println("Start waiting...");
 
+	//CAN related
+	String Receive_CAN;
+	String Receive_Master_Command="";
+	String Magnet_position_string="";
+
+	int Flag_from_CAN_Read=0;
+	unsigned int canId;
+    unsigned char len = 0;
+    unsigned char buf[8];
+
+    String Magnet_ps_1="";
+	String Result_ps="";
+	//String Head_flag;
+	//String result_message;
+	float Position_1_new=0;
+	//long int Position_1_old=0;
+
+
+	Serial.println("Start waiting...");
+	/***********************************************************************************************/
 	//Check if there is command from the MTS sensor or slave controller
-	Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
+	//Command_Read_from_Slave=CAN_send2GUI(); // The result will be message_slave or "0" for MTS flag.
+    CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
+    canId = CAN.getCanId();
+    char str[23];
+    unsigned char * pin = buf;
+    const char * hex = "0123456789ABCDEF";
+    char * pout = str;
+    String Result_String;
+    for(; pin < buf+sizeof(buf); pout+=3, pin++){
+        pout[0] = hex[(*pin>>4) & 0xF];
+        pout[1] = hex[ *pin     & 0xF];
+        pout[2] = ':';
+    }
+    pout[-1] = 0;
+    Receive_CAN = String(str);
+
+    if (canId==0x90){ // Message from Slave Controller ID 0x0090
+        Serial.print("Received Slave Command: ");
+        Serial.println(Receive_CAN);
+        Command_Read_from_Slave=Receive_CAN;
+    }
+    else if(canId==256){  // Message from MTS sensor ID 0x0100 = 256
+        Magnet_ps_1=Receive_CAN.substring(6,8)+Receive_CAN.substring(9,11)+Receive_CAN.substring(12,14);
+        Position_1_new=ConvertString2Int(Magnet_ps_1)*0.005; //Position_1_int=int(Position_1);
+        Result_ps=String(Position_1_new);
+        MTS_sensor_out="C"+Result_ps+"+"+"00000";//+Magnet_ps_2;
+        Serial.print(MTS_sensor_out);
+        Command_Read_from_Slave="0";
+    }
+    else
+    {
+    	//Serial.print("Received Data 2:"); Serial.println(Receive_CAN);
+    }
+    /***********************************************************************************************/
 
 	if(Command_Read_from_Slave!="0" && Command_Read_from_Slave!=""){
         Serial.print("CAN Message from slave: ");
@@ -416,7 +469,7 @@ void loop() {
     case 9:
         if(Command_Read_from_Slave=="01:03:05:06:07:08:09:0A"){ // Slave2Master Initial Finish
             Serial.println("Initial Finish Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 delay(1);
                 //Serial.println(Command_Read_from_Slave);
@@ -433,7 +486,7 @@ void loop() {
             digitalWrite(Driving_Backward,HIGH); // Move Neutral
             digitalWrite(Driving_Forward,HIGH);
             Serial.println("Forward Master Proximity On Chain Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 //Serial.println(Command_Read_from_Slave);
                 //Serial.println("19910515 Send out");
@@ -449,7 +502,7 @@ void loop() {
             digitalWrite(Driving_Backward,HIGH); // Move Neutral
             digitalWrite(Driving_Forward,HIGH);
             Serial.println("Backward Master Proximity On Chain Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 //Serial.println(Command_Read_from_Slave);
                 //Serial.println("19910515 Send out");
@@ -462,7 +515,7 @@ void loop() {
         }
         else if(Command_Read_from_Slave=="01:03:05:00:00:00:00:01"){ // Slave2Master Position #1 Confirmed
             Serial.println("Position #1 Master Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
             }
             digitalWrite(SSerialTxControl, RS485Transmit);delay(1);
@@ -483,7 +536,7 @@ void loop() {
         }
         else if(Command_Read_from_Slave=="01:03:05:00:00:00:00:03"){ // Slave2Master Position #3 Confirmed
             Serial.println("Position #3 Master Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 delay(1);
             }
@@ -494,7 +547,7 @@ void loop() {
         }
         else if(Command_Read_from_Slave=="01:03:05:00:00:00:00:04"){ // Slave2Master Position #4 Confirmed
             Serial.println("Position #4 Master Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 delay(1);
             }
@@ -505,14 +558,14 @@ void loop() {
         }
         else if(Command_Read_from_Slave=="01:03:05:00:00:00:00:00"){ // Slave2Master Termination Confirmed
             Serial.println("Termination Master Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 delay(1);
             }
         }
         else if(Command_Read_from_Slave=="01:03:05:01:01:01:01:01"){ // Slave2Master Reboot Confirmed
             Serial.println("Reboot Master Jumped in");
-            for(int i = 0; i<50; i++){
+            for(int i = 0; i<10; i++){
                 CAN_Send(0x0080,0x01,0x09,0x09,0x01,0x00,0x05,0x01,0x05);
                 delay(1);
             }
@@ -652,19 +705,25 @@ String CAN_send2GUI(){
     long int Position_1_new=0;
     long int Position_1_old=0;
 
-    CAN_Read_message_1_new=CAN_Read();
+    CAN_Read_message_1_new=CAN_Read_();
 
     Head_flag=CAN_Read_message_1_new.substring(0,1);
-    if(Head_flag=="M"){
+
+    CAN_Read_message_1_new=CAN_Read_message_1_new.substring(1);
+
+    if(Head_flag=="M")
+    {
         CAN_Read_message_1_new=CAN_Read_message_1_new.substring(1);
     }
-    else if (Head_flag=="S"){
+    else if(Head_flag=="S")
+    {
         result_message=CAN_Read_message_1_new.substring(1);
         return result_message;
     }
     else{
     	return "";
     }
+
 
     Magnet_ps_1=CAN_Read_message_1_new.substring(6,8)+CAN_Read_message_1_new.substring(9,11)+CAN_Read_message_1_new.substring(12,14);
 
@@ -684,6 +743,9 @@ String CAN_send2GUI(){
     }
 
     MTS_sensor_out="C"+Magnet_ps_1+"+"+"00000";//+Magnet_ps_2;
+
+    //Serial.print(MTS_sensor_out);
+
     //digitalWrite(SSerialTxControl, RS485Transmit);//delay(1);
     //Serial.println(MTS_sensor_out);delay(2);
     //Serial3.println(MTS_sensor_out);delay(2);

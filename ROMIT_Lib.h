@@ -24,7 +24,7 @@
 unsigned long int ConvertString2Int(String Magnet_ps);
 void CAN_Send(uint16_t ID, uint8_t dt0, uint8_t dt1, uint8_t dt2, uint8_t dt3,
 		uint8_t dt4, uint8_t dt5, uint8_t dt6, uint8_t dt7);
-String CAN_Read();
+String CAN_Read_();
 String CAN_Read_from_Slave();
 void setMyTimer4(long int frequency_A, long int frequency_B, long int frequency_C);
 

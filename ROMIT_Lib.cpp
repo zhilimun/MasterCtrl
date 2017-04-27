@@ -36,7 +36,7 @@ void CAN_Send(uint16_t ID, uint8_t dt0, uint8_t dt1, uint8_t dt2, uint8_t dt3,
 
 
 // Receive a CAN message
-String CAN_Read() {
+String CAN_Read_() {
 	unsigned char len = 0;
 	unsigned char buf[8];
 	String Receive_CAN;
@@ -64,6 +64,7 @@ String CAN_Read() {
 		else if(canId==0x0090){
 			Receive="S"+Receive_CAN;
 		}
+
 		return Receive;
 	}
 	else{
