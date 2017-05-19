@@ -38,6 +38,8 @@ MS5837 Pressure_sensor;
 #define Relay7          31
 #define Relay8          26
 
+#define TerminPin	47
+
 #define Tilt_x_Input    A8 //Blue wire on Inclinometer
 #define Tilt_y_Input    A9 //Yellow wire on Inclinometer
 
@@ -101,6 +103,8 @@ void setup()
     pinMode(Relay7, OUTPUT); digitalWrite(Relay7,HIGH); delay(2);
     pinMode(Relay8, OUTPUT); digitalWrite(Relay8,HIGH); delay(2);
 
+    // Set the TerminPin
+    pinMode(TerminPin, OUTPUT);digitalWrite(TerminPin,LOW);delay(2);
 
     // Communicate with PC through USB connection
     Serial.begin(115200);delay(5);
@@ -323,8 +327,11 @@ void loop() {
         //Master_Serial.println("RMTSHUTD");delay(5);  // Mst ask Slv to start Beeper
         digitalWrite(PinFrontLight,HIGH);
         digitalWrite(PinFrontLight2,HIGH);
+
+        digitalWrite(TerminPin,HIGH);delay(500);
+
         //CAN_Send(0x0000,0x02,0x01,0x00,0x00,0x00,0x00,0x00,0x00);
-        CAN_Send(0x0080,0x02,0x04,0x06,0x00,0x00,0x00,0x00,0x00);// Master2Slave Termination command 2 4 6 0 0 0 0 0
+        //CAN_Send(0x0080,0x02,0x04,0x06,0x00,0x00,0x00,0x00,0x00);// Master2Slave Termination command 2 4 6 0 0 0 0 0
 
         digitalWrite(SSerialTxControl, RS485Transmit);//delay(5);
         Serial3.println("TERMINATION!");delay(1);
@@ -332,6 +339,9 @@ void loop() {
         digitalWrite(SSerialTxControl, RS485Receive);//delay(5);
         PC_Command="";
 
+        digitalWrite(TerminPin,LOW);
+
+        /*
         while(1){
             delay(500);
             while ((Serial3.available())&&PC_Command.length()<8)
@@ -353,6 +363,7 @@ void loop() {
                 delay(500);
             }
         }
+        */
         break;
     case 3:
         CAN_Send(0x0080,0x02,0x04,0x06,0x01,0x01,0x01,0x01,0x01);// Master2Slave Reboot command 2 4 6 1 1 1 1 1
