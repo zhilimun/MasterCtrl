@@ -172,7 +172,7 @@ void loop() {
 	String Receive_CAN;
 	String Receive_Master_Command="";
 	String Magnet_position_string="";
-
+	unsigned char ii=0;
 	int Flag_from_CAN_Read=0;
 	unsigned int canId;
     unsigned char len = 0;
@@ -328,18 +328,15 @@ void loop() {
         digitalWrite(PinFrontLight,HIGH);
         digitalWrite(PinFrontLight2,HIGH);
 
-        digitalWrite(TerminPin,HIGH);delay(500);
-
         //CAN_Send(0x0000,0x02,0x01,0x00,0x00,0x00,0x00,0x00,0x00);
-        //CAN_Send(0x0080,0x02,0x04,0x06,0x00,0x00,0x00,0x00,0x00);// Master2Slave Termination command 2 4 6 0 0 0 0 0
+        CAN_Send(0x0080,0x02,0x04,0x06,0x00,0x00,0x00,0x00,0x00);// Master2Slave Termination command 2 4 6 0 0 0 0 0
+
 
         digitalWrite(SSerialTxControl, RS485Transmit);//delay(5);
         Serial3.println("TERMINATION!");delay(1);
         Serial.println("Master Termination");
         digitalWrite(SSerialTxControl, RS485Receive);//delay(5);
         PC_Command="";
-
-        digitalWrite(TerminPin,LOW);
 
         /*
         while(1){
